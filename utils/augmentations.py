@@ -295,10 +295,13 @@ def intense(ims: List, ims_labels: List, kept_rate:float = 0.5, padding:int=10):
     tg_labels = [] # new list of labels corresponding to images
     bg_ind = 0
     src_ind = len(ims)-1
+
+    bg_attms = 3
     while bg_ind < src_ind:
-        bg_im = ims[bg_ind]
-        bg_h, bg_w = bg_im.shape[:2]
-        bg_labels = ims_labels[bg_ind]
+        if bg_attms == 3:
+            bg_im = ims[bg_ind]
+            bg_h, bg_w = bg_im.shape[:2]
+            bg_labels = ims_labels[bg_ind]
 
         src_im = ims[src_ind]
         src_labels = ims_labels[src_ind]
@@ -329,10 +332,13 @@ def intense(ims: List, ims_labels: List, kept_rate:float = 0.5, padding:int=10):
         ims_labels[src_ind] = np.array([src_labels[i] for i in range(len(src_labels)) if i not in selected_idx] )
         if not ims_labels[src_ind].any():
             src_ind -= 1
-        bg_ind += 1
-        print(src_ind, bg_ind, '\tindex')
-        tg_ims.append(bg_im)
-        tg_labels.append(bg_labels)
+        bg_attms -= 1
+        if bg_attms < 0:
+            bg_attms = 3
+            bg_ind += 1
+            
+            tg_ims.append(bg_im)
+            tg_labels.append(bg_labels)
 
     return tg_ims, tg_labels
 
