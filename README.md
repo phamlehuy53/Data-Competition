@@ -1,3 +1,16 @@
+## Thay đổi đường dẫn trong file config
+1. train:  ./dataset/images/train  # relative path to train images
+2. sửa hệ số trong file hyp. để hệ số trong khoảng 0.001->0.003
+cho mọi tham số trừ bộ màu HSV
+3. chạy file data_augrandom.py
+
+
+```
+python3 data_augrandom.py
+```
+4. kết quả ở trong file "../DATAORG/data_aug07_11/data_aug_11_11/imgworst_4"
+5. chú í mỗi lần aug sửa "/imgworst_4/labels/111100000004" đừng để trung . khó copy
+
 #### Table of contents
 1. [Introduction](#introduction)
 2. [Dataset](#dataset)
