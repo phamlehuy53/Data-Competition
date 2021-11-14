@@ -6,6 +6,7 @@ Image augmentation functions
 import logging
 import math
 import random
+from typing import List
 
 import cv2
 import numpy as np
@@ -256,6 +257,84 @@ def cutout(im, labels, p=0.5):
                 labels = labels[ioa < 0.60]  # remove >60% obscured labels
 
     return labels
+
+def intense(ims: List, ims_labels: List, kept_rate:float = 0.5, padding:int=10):
+    """gather boxes into less images while keep number of boxes
+
+    Args:
+        ims (List): List np.ndarray images
+        ims_labels (List): List of labels in np.ndarray, absoluted xy [[label_index, xmin, ymin, xmax, ymax]]
+        kept_rate (float, optional): How many images are kept. Defaults to 0.5.
+    """
+    def is_collided(box1, box2, overlap:float=0.1):
+        """Check if 2 boxes are collied
+
+        Args:
+            box1 (list): [x1, y1 ,x2, y2]
+            box2 (List): x1, y1, x2, y2
+            overlap (float, optional): [description]. Defaults to 0.1.
+
+        Returns:
+            [Bool]: [description]
+        """
+        # outer_box = np.concatenate((box1, box2),  axis=0)
+        outer_w = max(box2[2], box1[2]) - min(box2[0], box1[0])
+        outer_h = max(box2[3], box1[3]) - min(box2[1], box1[1])
+        box1wh = box1[2] - box1[0], box1[3] - box1[1]
+        box2wh = box2[2] - box2[0], box2[3] - box2[1]
+        if outer_h < box1wh[1] + box2wh[1]:
+            return True
+        if outer_w < box1wh[0] + box2wh[0]:
+            return True
+        return False
+
+    # breakpoint()
+    # TODO: check deep copy
+    # ims = ims.copy()
+    tg_ims = [] # new list of images
+    tg_labels = [] # new list of labels corresponding to images
+    bg_ind = 0
+    src_ind = len(ims)-1
+    while bg_ind < src_ind:
+        bg_im = ims[bg_ind]
+        bg_h, bg_w = bg_im.shape[:2]
+        bg_labels = ims_labels[bg_ind]
+
+        src_im = ims[src_ind]
+        src_labels = ims_labels[src_ind]
+        # [label, image]
+        # src_objects = np.array([ (lb[0], src_im[lb[4]: lb[2], lb[3]: lb[1]]) for lb in src_labels])
+        selected_idx = []
+        for j, src_obj in enumerate(src_labels):
+            # src_boxes = src_obj[:, 1:]
+            xs1, ys1, xs2, ys2 = src_obj[1:]
+            bh, bw = ys2-ys1, xs2-xs1
+            for i in range(5):
+                x1, y1 =  int(np.random.rand()*(bg_w-bw)), int(np.random.rand()*(bg_h-bh))
+                x2, y2 = x1+bw, y1+bh
+                accepted = False
+                # check new box collided with other 
+                for bg_box in bg_labels[:, 1:]:
+                    if is_collided(bg_box, [x1, y1, x2, y2] ):
+                        continue
+                    accepted = True
+                if accepted:
+                    bg_labels = np.concatenate((bg_labels, [[src_obj[0], x1, y1, x2, y2]]))
+                    # bg_labels.append([src_obj[0], x1, y1, x2, y2])
+                    # bg_im[y1:y2, x1:x2] = cv2.resize(src_im[ys1:ys2, xs1:xs2], (bg_im.shape[:2]/src_im.shape[:2]*[bh, bw])[::-1].astype(int))
+                    bg_im[y1:y2, x1:x2] = src_im[ys1:ys2, xs1:xs2]
+                    selected_idx.append(j)
+                    break
+
+        ims_labels[src_ind] = np.array([src_labels[i] for i in range(len(src_labels)) if i not in selected_idx] )
+        if not ims_labels[src_ind].any():
+            src_ind -= 1
+        bg_ind += 1
+        print(src_ind, bg_ind, '\tindex')
+        tg_ims.append(bg_im)
+        tg_labels.append(bg_labels)
+
+    return tg_ims, tg_labels
 
 
 def mixup(im, labels, im2, labels2):
