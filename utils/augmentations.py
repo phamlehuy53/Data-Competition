@@ -315,12 +315,12 @@ def intense(ims: List, ims_labels: List, kept_rate:float = 0.5, padding:int=10):
             for i in range(5):
                 x1, y1 =  int(np.random.rand()*(bg_w-bw)), int(np.random.rand()*(bg_h-bh))
                 x2, y2 = x1+bw, y1+bh
-                accepted = False
+                accepted = True
                 # check new box collided with other 
                 for bg_box in bg_labels[:, 1:]:
                     if is_collided(bg_box, [x1, y1, x2, y2] ):
-                        continue
-                    accepted = True
+                        accepted = False
+                        break
                 if accepted:
                     bg_labels = np.concatenate((bg_labels, [[src_obj[0], x1, y1, x2, y2]]))
                     # bg_labels.append([src_obj[0], x1, y1, x2, y2])

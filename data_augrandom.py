@@ -249,8 +249,8 @@ class GenImagesAndLabels(Dataset):  # for training/testing
             #print(index)
             os.makedirs("../dataset/data_aug/211114/images/", exist_ok=True)
             os.makedirs("../dataset/data_aug/211114/labels/", exist_ok=True)
-            cv2.imwrite("../dataset/data_aug/211114/images/111100000004"+str(index)+".jpg",img)
-            txt_file=open("../dataset/data_aug/211114/labels/111100000004"+str(index)+".txt",'w')
+            cv2.imwrite("../dataset/data_aug/211114/images/wo04"+str(index)+".jpg",img)
+            txt_file=open("../dataset/data_aug/211114/labels/wo04"+str(index)+".txt",'w')
             for item in labels:
                 item=item.tolist()
                 item[0]=int(item[0])

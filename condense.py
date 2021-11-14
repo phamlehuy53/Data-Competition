@@ -9,10 +9,18 @@ from utils import miscs, augmentations, datasets, general
 # augmentations = importlib.reload(augmentations)
 # miscs = importlib.reload(miscs)
 # %%
-src_dir = '/mnt/01D322563C532490/Data/face/211006/dataset/images'
-# src_dir = '/mnt/01D322563C532490/Data/face/211006/dataset/crowded/images'
+# src_dir = '/mnt/01D322563C532490/Data/face/211006/dataset/images'
+# prefix = 'cr1114'
+
+src_dir = '/mnt/01D322563C532490/Data/face/211006/dataset/worst/images'
+prefix = 'cv_w1114'
 tg_dir = '/mnt/01D322563C532490/Data/face/211006/dataset/crowded'
-prefix = 'cr1114'
+
+if not os.path.isdir(tg_dir):
+	os.makedirs(tg_dir)
+
+os.makedirs( os.path.join(tg_dir, 'images/train'), exist_ok=True)
+os.makedirs( os.path.join(tg_dir, 'labels/train'), exist_ok=True)
 
 load_obj = datasets.LoadImagesAndLabels(src_dir)
 # idx = np.random.randint(0, len(load_obj), (10, ))
@@ -30,8 +38,6 @@ res = augmentations.intense(ims, labels)
 
 # %%
 import cv2
-if not os.path.isdir(tg_dir):
-	os.makedirs(tg_dir)
 
 
 for i, (im, lab) in enumerate(zip(*res)):

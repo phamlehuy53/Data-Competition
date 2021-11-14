@@ -7,8 +7,8 @@ import shutil
 
 path_img="/mnt/01D322563C532490/Data/face/211006/dataset/images/train"
 path_labels="/mnt/01D322563C532490/Data/face/211006/dataset/labels/train"
-path_save_img = "/mnt/01D322563C532490/Data/face/211006/dataset/worst/images"
-path_save_label="/mnt/01D322563C532490/Data/face/211006/dataset/worst/labels"
+path_save_img = "/mnt/01D322563C532490/Data/face/211006/dataset/worst/images/train"
+path_save_label="/mnt/01D322563C532490/Data/face/211006/dataset/worst/labels/train"
 
 if not os.path.isdir(path_save_img):
     os.makedirs(path_save_img)
