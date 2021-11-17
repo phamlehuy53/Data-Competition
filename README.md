@@ -5,8 +5,16 @@ cho mọi tham số trừ bộ màu HSV
 3. chạy file data_augrandom.py
 
 
-```
-python3 data_augrandom.py
+```python
+# first time with all data
+python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/train' --clean --exclude_list='/mnt/01D322563C532490/Data/face/211006/toss_out.txt' --iter=1
+
+# change config
+# second time with special ones
+python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/train' --exclude_list='/mnt/01D322563C532490/Data/face/211006/toss_out.txt' --iter=12
+
+# third time with external data
+python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/train' --exclude_list='/mnt/01D322563C532490/Data/face/211006/toss_out.txt' --iter=3
 ```
 4. kết quả ở trong file "../DATAORG/data_aug07_11/data_aug_11_11/imgworst_4"
 5. chú í mỗi lần aug sửa "/imgworst_4/labels/111100000004" đừng để trung . khó copy

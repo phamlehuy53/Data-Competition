@@ -1,6 +1,8 @@
 # train: /mnt/01D322563C532490/Data/face/211006/dataset/images  # relative path to train images
 # train: /mnt/01D322563C532490/Data/face/211006/dataset/crowded/images/train  # relative path to train images
-train: /mnt/01D322563C532490/Data/face/211006/original_dataset/dataset/images/public_test
+# train: /mnt/01D322563C532490/Data/face/211006/dataset/all
+# train:  /mnt/01D322563C532490/Data/face/211006/dataset/1117_hard
+train:  /mnt/01D322563C532490/Data/face/211006/dataset/worst
 val: ./dataset/images/val  # relative path to val images
 test: ./dataset/images/public_test  # relative path to public test images
 

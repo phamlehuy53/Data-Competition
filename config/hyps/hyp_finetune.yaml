@@ -16,17 +16,34 @@ iou_t: 0.20
 anchor_t: 4.0
 
 # Augment
+# for all
+# fl_gamma: 0.2
+# hsv_h: 0.5
+# hsv_s: 0.5
+# hsv_v: 0.5
+# degrees: 25
+# translate: 0.001
+# scale: 0.002
+# shear: 15
+# perspective: 0.001
+# flipud: 0.01
+# fliplr: 0.6
+# mosaic: 0.1
+# mixup: 0.01
+# copy_paste: 0.1
+
+# for special cases
 fl_gamma: 0.2
 hsv_h: 0.5
 hsv_s: 0.5
 hsv_v: 0.5
-degrees: 0.002
+degrees: 30
 translate: 0.001
-scale: 0.002
-shear: 0.001
-perspective: 0.001
-flipud: 0.2
+scale: 0.005
+shear: 20
+perspective: 0.005
+flipud: 0.01
 fliplr: 0.6
-mosaic: 0.001
-mixup: 0.001
-copy_paste: 0.1
+mosaic: 0.2
+mixup: 0.04
+copy_paste: 0.2
