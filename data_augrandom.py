@@ -25,9 +25,6 @@ class Augmenter(LoadImagesAndLabels):
         self.im_name = '{}_{}_{:05d}.jpg' # prefile_srcfile_index
         pass
 
-    def __getitem__(self, index):
-        return super().__getitem__(index)
-
     @staticmethod
     def write_label(labels: List, label_path: str):
         """Write xywhn to file
