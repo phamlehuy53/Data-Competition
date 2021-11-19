@@ -385,6 +385,7 @@ def parser(known=False):
     args.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     args.add_argument('--workers', type=int, default=8, help='maximum number of dataloader workers')
     args.add_argument('--name', type=str, help='define your version experience', required=True)
+    args.add_argument('--log_file', type=str, help="Log file")
     args = args.parse_known_args()[0] if known else args.parse_args()
 
     with open(Path('config') / 'train_cfg.yaml') as f:
@@ -419,7 +420,10 @@ def main(args, callbacks=Callbacks()):
     device = select_device(args.device, batch_size=args.batch_size)
     print(device)
 
-    train(args.hyp, args, device, callbacks)
+    results = train(args.hyp, args, device, callbacks)
+    with open(args.log_file, 'a') as fa:
+        fa.write( '\t'.join(str(s) for s in results[:5])+ '\n')
+
 
 
 if __name__ == "__main__":
