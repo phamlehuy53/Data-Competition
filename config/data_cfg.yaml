@@ -2,9 +2,9 @@
 # train: /mnt/01D322563C532490/Data/face/211006/dataset/crowded/images/train  # relative path to train images
 # train: /mnt/01D322563C532490/Data/face/211006/dataset/all
 # train:  /mnt/01D322563C532490/Data/face/211006/dataset/1117_hard
-train:  /mnt/01D322563C532490/Data/face/211006/dataset/worst
-val: ./dataset/images/val  # relative path to val images
-test: ./dataset/images/public_test  # relative path to public test images
+train:  /home/firstman/Documents/code/Dataset/data/dataset/images/train
+val: /home/firstman/Documents/code/Dataset/data/dataset/images/val  # relative path to val images
+test: /home/firstman/Documents/code/Dataset/data/dataset/images/public_test  # relative path to public test images
 
 # Classes
 # Please don't change
