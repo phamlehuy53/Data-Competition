@@ -12,7 +12,11 @@ if [ -z $batch_size ]; then
 	batch_size=32
 fi
 
-if [ ! -z $log_file ]; then
+if [ -z $log_file ]; then
+	log_file="../$(date '+%Y-%m-%d-%H-%M-%S').txt"
+	echo "No log_file provided. Create ${log_file}"
+
+else 
 
 	if [ ! -f log_file ]; then
 		echo "File ${log_file} not existed, create new one!"
@@ -28,7 +32,7 @@ for (( c=1; c<=num_train; c++))
 do	
 	echo "=========================================================="
 	echo "$(date) Iter $c-th"
-	python3 train.py --batch-size $batch_size --device 0 --name $num_train --log_file $log_file
+	python3 train.py --batch-size $batch_size --device 0 --name $num_train --log_file $log_file --log=WARNING
 done
 
 echo "$(date) Training finished"

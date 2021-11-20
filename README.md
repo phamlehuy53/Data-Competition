@@ -16,7 +16,7 @@ python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/tr
 # third time with external data
 python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/train' --exclude_list='/mnt/01D322563C532490/Data/face/211006/toss_out.txt' --iter=3
 
-bash train_val.sh {number_run}
+bash train_val.sh {number_run} [log_file] [batch_size]
 ```
 4. kết quả ở trong file "../DATAORG/data_aug07_11/data_aug_11_11/imgworst_4"
 5. chú í mỗi lần aug sửa "/imgworst_4/labels/111100000004" đừng để trung . khó copy
