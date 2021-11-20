@@ -5,6 +5,12 @@ echo "$(date) Training started"
 
 num_train=$1
 log_file=$2
+batch_size=$3
+
+if [ -z $batch_size ]; then
+	echo "No batch_size was provided. Set default to 32"
+	batch_size=32
+fi
 
 if [ ! -z $log_file ]; then
 
@@ -22,7 +28,7 @@ for (( c=1; c<=num_train; c++))
 do	
 	echo "=========================================================="
 	echo "$(date) Iter $c-th"
-	python3 train.py --batch-size 64 --device 0 --name $num_train --log_file $log_file
+	python3 train.py --batch-size $batch_size --device 0 --name $num_train --log_file $log_file
 done
 
 echo "$(date) Training finished"
