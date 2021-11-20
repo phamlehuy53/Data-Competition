@@ -78,7 +78,7 @@ def train(hyp,
     """
     plots: bool = not evolve
     cuda: bool = device.type != 'cpu'
-    init_seeds(0)
+    # init_seeds(0)
 
     data_dict = check_dataset(data_cfg)
     train_path, val_path = data_dict['train'], data_dict['val']
