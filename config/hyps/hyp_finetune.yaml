@@ -17,7 +17,7 @@ anchor_t: 4.0
 
 # Augment
 # for all
-# fl_gamma: 0.2
+# fl_gamma: 0.0
 # hsv_h: 0.5
 # hsv_s: 0.5
 # hsv_v: 0.5
@@ -33,7 +33,7 @@ anchor_t: 4.0
 # copy_paste: 0.1
 
 # for special cases
-fl_gamma: 0.2
+fl_gamma: 0.0
 hsv_h: 0.5
 hsv_s: 0.5
 hsv_v: 0.5
