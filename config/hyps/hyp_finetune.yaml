@@ -34,9 +34,9 @@ anchor_t: 4.0
 
 # for special cases
 fl_gamma: 0.0
-hsv_h: 0.5
-hsv_s: 0.5
-hsv_v: 0.5
+hsv_h: 0.2
+hsv_s: 0.2
+hsv_v: 0.2
 degrees: 30
 translate: 0.001
 scale: 0.005

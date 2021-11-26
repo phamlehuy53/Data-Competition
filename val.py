@@ -210,7 +210,7 @@ def run(data,
             callbacks.run('on_val_image_end', pred, normed_pred, path, names, img[si])
 
         # Plot images
-        if plots and batch_i < 3:
+        if plots and batch_i < 7:
             f = save_dir / f'val_batch{batch_i}_labels.jpg'  # labels
             Thread(target=plot_images, args=(img, targets, paths, f, names), daemon=True).start()
             f = save_dir / f'val_batch{batch_i}_pred.jpg'  # predictions

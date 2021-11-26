@@ -29,7 +29,7 @@ else
 	fi
 fi
 
-for (( c=1; c<=num_train; c++))
+for (( c=1; c<=num_train; c++ ))
 do	
 	echo "=========================================================="
 	echo "$(date) Iter $c-th"
