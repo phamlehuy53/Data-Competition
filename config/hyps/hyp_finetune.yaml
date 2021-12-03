@@ -16,34 +16,43 @@ iou_t: 0.20
 anchor_t: 4.0
 
 # Augment
-# for all
-# fl_gamma: 0.0
-# hsv_h: 0.5
-# hsv_s: 0.5
-# hsv_v: 0.5
-# degrees: 25
-# translate: 0.001
-# scale: 0.002
-# shear: 15
-# perspective: 0.001
-# flipud: 0.01
-# fliplr: 0.6
-# mosaic: 0.1
-# mixup: 0.01
-# copy_paste: 0.1
-
-# for special cases
+# Normal - light augment
 fl_gamma: 0.0
-hsv_h: 0.2
-hsv_s: 0.2
-hsv_v: 0.2
-degrees: 30
+hsv_h: 0.3
+hsv_s: 0.3
+hsv_v: 0.3
+degrees: 5
 translate: 0.001
-scale: 0.005
-shear: 20
-perspective: 0.005
-flipud: 0.01
-fliplr: 0.6
-mosaic: 0.2
-mixup: 0.04
-copy_paste: 0.2
+scale: 0.0002
+shear: 5
+perspective: 0.0003
+flipud: 0.00001
+fliplr: 0.4
+mosaic: 0.0001
+mixup: 0.01
+copy_paste: 0.1
+cutout: 0.1
+
+# # NOTE: high degrees or shear makes label expand unexpectedly
+# fl_gamma: 0.0
+# hsv_h: 0.2
+# hsv_s: 0.2
+# hsv_v: 0.2
+# degrees: 20 # 60 is ok for variation
+# # higher translate for 1-box image
+# # normal
+# # translate: 0.005 # depend on object position toward image's boundary
+# translate: 0.007 # depend on object position toward image's boundary
+# # lower scale for small-box image
+# # normal
+# scale: 0.005 # follow object/image ratio
+# # incorrect_mask
+# # scale: 0.007 # follow object/image ratio
+# shear: 5 # < 20
+# perspective: 0.0007
+# flipud: 0.0005
+# fliplr: 0.3
+# mosaic: 0.0002
+# mixup: 0.04
+# copy_paste: 0.2
+# cutout: 0.2

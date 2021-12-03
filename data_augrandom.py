@@ -1,4 +1,8 @@
+import enum
 from sys import flags
+
+from torch.utils import data
+from yaml import parse
 from utils.datasets import *
 from utils.general import check_dataset,colorstr
 from utils.augmentations import cutout
@@ -6,6 +10,7 @@ from argparse import ArgumentParser
 from typing import List, Optional, Tuple
 import cv2
 from datetime import datetime
+from copy import deepcopy
 
 class Augmenter(LoadImagesAndLabels):
     def __init__(self, path, img_size=640, batch_size=16, augment=False, hyp=None, rect=False, image_weights=False, cache_images=False, single_cls=False, stride=32, pad=0, prefix='', tg_path=None, file_prefix='', clean=False):
@@ -45,7 +50,13 @@ class Augmenter(LoadImagesAndLabels):
         with open(label_path, 'w') as fw:
             content = '\n'.join([ ' '.join(( i2s(lab[0]), *(f2s(i) for i in lab[1:]) )) for lab in labels])
             fw.write(content)
-        
+
+    @staticmethod
+    def read_label(lb_path):
+        lb = open(lb_path).read().strip().split('\n')
+        lb = [l.split() for l in lb]
+        return np.array([ [float(i) for i in l] for l in lb])
+
     def augment_save(self, index):
         img, labels, img_file, shapes = self.__getitem__(index)
         bname = os.path.basename(img_file).split('.')[0]
@@ -63,7 +74,7 @@ class Augmenter(LoadImagesAndLabels):
         labels = labels.cpu().detach().numpy()[:, 1:]
         return img, labels, img_file, shapes
 
-def extract_one(img: np.ndarray, labels: np.ndarray, class_ids: List[int], mode:str="blur", padding:int=0):
+def extract_one(img: np.ndarray, labels: np.ndarray, class_ids:List[int]=[], ids: List[int]=[], mode:str="blur", padding:int=0):
     """Extract multi-object image to images contain only one object
 
     Args:
@@ -76,10 +87,16 @@ def extract_one(img: np.ndarray, labels: np.ndarray, class_ids: List[int], mode:
         padding (int): Min padding added to object. If not provided, maximum padding not overlap other objects is chosen.
     """
     assert mode in ["blur", "clear"]
+    assert not (class_ids and ids) # extract object by its class id or its id-th in label list
     im_h, im_w = img.shape[:2]
     res_imgs = []
     res_labels = []
+    if len( labels ) == 0:
+        return [], []
     if mode == "blur":
+        pad = 0.01
+        padw = int( pad*im_w )
+        padh = int( pad*im_h )
         # Case 1: blur other objects
         # TODO: padding for blured object
         labels = np.copy(labels)
@@ -92,8 +109,10 @@ def extract_one(img: np.ndarray, labels: np.ndarray, class_ids: List[int], mode:
         # labels[:, 1:] = labels[:, 1]
         objs_extract = [] # id, (x1,y1,x2,y2), img
         # breakpoint()
-        for ( i, x1, y1, x2, y2 ) in labels:
-            if i in class_ids:
+        for j, ( i, x1, y1, x2, y2 ) in enumerate( labels ):
+            x1, y1 = max(x1-padw, 0), max(y1-padh, 0)
+            x2, y2 = min(x2+padw, im_w), min(y2+padh, im_h)
+            if i in class_ids or j in ids:
                 objs_extract.append(((i,x1,y1,x2,y2), img[y1:y2, x1:x2,...]))
             blured_img[y1:y2, x1:x2] = cv2.GaussianBlur(blured_img[y1:y2, x1:x2], (25,25), 30)
 
@@ -169,81 +188,37 @@ def extract_one(img: np.ndarray, labels: np.ndarray, class_ids: List[int], mode:
             ch = cv2.waitKey(0)
             if ch == 67:
                 cv2.destroyAllWindows()
-        for i in class_ids:
-            # for j, tg_obj in enumerate(labels[labels[:, 0]==i]):
-            for j, tg_obj in enumerate(labels):
-                if tg_obj[0] != i:
-                    continue
-                # print(tg_obj, i)
-                # print('other ', np.concatenate(( labels[:j], labels[j+1:] )))
-                cl_id, xc, yc, w, h = tg_obj
-                stride = min(0.05, 1.5*w, 1.5*h)
-                strides = [-stride, -stride, stride, stride] # left, top, right, bottom
-                # print('Stride 0 ', strides)
-                # s = np.array([xc-stride, yc-stride, xc+stride, yc+stride])
-                s = np.array(strides)
-                # Uncomment this
-                # if s[0] < 0 or s[1]<0 or s[2]>1 or s[3]>1:
-                #     continue
-                bst_are = [0,0,0,0] # xywhn 
-                get_max_area(0, strides, (xc, yc), bst_are , np.concatenate(( labels[:j, 1:], labels[j+1:, 1:] )), s)
-                # print('best_area ', bst_are)
-                if bst_are[2]*bst_are[3] == 0:
-                    continue
-                xmin, ymin, xmax, ymax = xywhn2xyxy(np.array([ bst_are ]), im_w, im_h)[0]
-                nw, nh = w/bst_are[2], h/bst_are[3]
-                nxc, nyc = ( xc-(bst_are[0]-bst_are[2]/2) )/bst_are[2], ( yc-(bst_are[1]-bst_are[3]/2) )/bst_are[3]
-                res_labels.append([cl_id, nxc, nyc, nw, nh])
+        # for j, tg_obj in enumerate(labels[labels[:, 0]==i]):
 
-                xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                res_imgs.append(img[ymin:ymax, xmin:xmax])
+        for j, tg_obj in enumerate(labels):
+            if ( tg_obj[0] not in class_ids ) and ( j not in ids ):
+                continue
+            # print(tg_obj, i)
+            # print('other ', np.concatenate(( labels[:j], labels[j+1:] )))
+            cl_id, xc, yc, w, h = tg_obj
+            stride = min(0.05, 1.5*w, 1.5*h)
+            strides = [-stride, -stride, stride, stride] # left, top, right, bottom
+            # print('Stride 0 ', strides)
+            # s = np.array([xc-stride, yc-stride, xc+stride, yc+stride])
+            s = np.array(strides)
+            # Uncomment this
+            # if s[0] < 0 or s[1]<0 or s[2]>1 or s[3]>1:
+            #     continue
+            bst_are = [0,0,0,0] # xywhn 
+            get_max_area(0, strides, (xc, yc), bst_are , np.concatenate(( labels[:j, 1:], labels[j+1:, 1:] )), s)
+            # print('best_area ', bst_are)
+            if bst_are[2]*bst_are[3] == 0:
+                continue
+            xmin, ymin, xmax, ymax = xywhn2xyxy(np.array([ bst_are ]), im_w, im_h)[0]
+            nw, nh = w/bst_are[2], h/bst_are[3]
+            nxc, nyc = ( xc-(bst_are[0]-bst_are[2]/2) )/bst_are[2], ( yc-(bst_are[1]-bst_are[3]/2) )/bst_are[3]
+            res_labels.append([cl_id, nxc, nyc, nw, nh])
 
-                # xmin, ymin, xmax, ymax = xywhn2xyxy(np.array([ bst_are ]), im_w, im_h)[0]
-                # xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                # res_imgs.append(img[ymin:ymax, xmin:xmax])
-            # print(xmin, ymin, xmax, ymax)
-            # print(img[ymin:ymax, xmin:xmax].shape)
-                    # break
+            xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
+            res_imgs.append(img[ymin:ymax, xmin:xmax])
 
-        # def xywhn2xy4n(x: np.ndarray):
-        #     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
-        #     y[:, 0] -= y[:, 2]/2
-        #     y[:, 1] -= y[:, 3]/2
-        #     y[:, 2] += y[:, 0]
-        #     y[:, 3] += y[:, 1]
-        #     return np.concatenate((y[:, :2], y[:, 0, np.newaxis], y[:, 3, np.newaxis], y[:, 2:], y[:, 2, np.newaxis], y[:, 1, np.newaxis]), axis=1).reshape(-1, 4, 2)
-
-        # label4s = xywhn2xy4n(labels[:, 1:])
-        # points = label4s.reshape(-1, 2)
-        # if len(labels) < 2:
-        #     #TODO: break here
-        #     pass
-        # for i in class_ids:
-        #     for j in range(len(labels)):
-        #         if labels[j, 0] == i:
-        #             continue
-        #         tg_obj = labels[j]
-        #         tg_id, xc, yc, w, h = tg_obj
-        #         # TODO: overlap-tg_obj cases not handled
-        #         src_point = points[np.argsort(np.sum( np.abs( points-tg_obj[1:3] ), axis=1))[4]]
-        #         dxy = np.abs(src_point-tg_obj[1:3])
-        #         dmin = max(dxy)
-        #         # crop = np.concatenate((tg_obj[1:3], ))
-        #         # Ignore cropped areas smaller than objs 
-        #         if 4*dxy[0]*dxy[1] < w*h:
-        #             continue
-        #         # new_label = np.array([ tg_id, dxy[0], dxy[1], w/(2*dxy[0]), h/(2*dxy[1]) ])
-        #         new_label = np.array([ tg_id, dmin, dmin, w/(2*dmin), h/(2*dmin) ])
-        #         # xmin, ymin, xmax, ymax = [int(x) for x in  xywhn2xyxy(np.array( [ [xc, yc, *(dxy*2)] ] ), im_w, im_h)[0]]
-        #         xmin, ymin, xmax, ymax = [int(x) for x in  xywhn2xyxy(np.array( [ [xc, yc, dmin*2, dmin*2] ] ), im_w, im_h)[0]]
-        #         res_imgs.append(img[ymin: ymax, xmin: xmax])
-        #         res_labels.append(new_label)
-
-    return np.array( res_imgs ), np.array(res_labels)
-
-def read_label(lb_path: str):
-    data = open(lb_path, 'r').read().strip().split('\n')
-    return [ [float(x) for x in l.split() ] for l in data]
+    # return np.array( res_imgs ), np.array(res_labels)
+    return res_imgs , res_labels
 
 
 
@@ -269,7 +244,7 @@ def _main(args):
         except Exception as e:
             print("Load exclude-list file failed!", e)
             exclude_list = None
-    dataset = Augmenter(train_path, 640, 16,
+    dataset = Augmenter(train_path, 1024, 16,
                                       augment=True,  # augment images
                                       hyp=hyp,  # augmentation hyperparameters
                                       rect=False,  # rectangular training
@@ -283,12 +258,15 @@ def _main(args):
                                       file_prefix=args.file_pre,
                                       clean=args.clean)
 
-    for j in tqdm( range(args.iter) ):
-	   #TODO: tidy code 
-        dataset.update_pre_file()
-        dataset.pre_file = f"{j:02d}_{dataset.pre_file}"
-        for i in tqdm( range(len(dataset)), leave=False):
-            dataset.augment_save(i)
+    if args.liveshow:
+        liveshow(hyp, dataset)
+    else:
+        for j in tqdm( range(args.iter) ):
+        #TODO: tidy code 
+            dataset.update_pre_file()
+            dataset.pre_file = f"{j:02d}_{dataset.pre_file}"
+            for i in tqdm( range(len(dataset)), leave=False):
+                dataset.augment_save(i)
     
     if exclude_list:
         for f in exclude_list:
@@ -299,6 +277,135 @@ def _main(args):
                 pass
     pass
 
+def liveshow(hyp: dict, dataset: Augmenter):
+    """Live adjust hyp_params
+    Instruction key:
+    a = previous image
+    d = next image
+    q = quit
+    e = enter edit mode
+        K_MODS: change param correspondingly
+            { [ key_num: param_name, step, value ]}
+    k = increase current key value by step
+    j = decrease current key value by step
+
+    c = directly change current hyp param
+        s = change step
+        v = change value
+        enter in stdin
+    Args:
+        hyp (dict): [description]
+        dataset (Augmenter): [description]
+    """
+    hyp = deepcopy(hyp)
+    # idx = input()
+    K_NEXT = 'd'
+    K_QUIT = 'q'
+    K_PREV = 'a'
+    
+    K_EDIT = 'e'
+    K_DOWN = 'k'
+    K_UP   = 'j'
+    K_SET  = 'c'
+    # name: {key_value, change_value, init_value}
+    K_MODS = {
+        '1' : [ 'hsv_h', 0.1 , 0.1 ] ,
+        '2' : [ 'hsv_s', 0.1 , 0.1 ],
+        '3' : [ 'hsv_v', 0.1 , 0.1 ],
+        '4' : [ 'degrees'  , 5   , 0 ],
+        '5' : [ 'translate', 0.001, 0.005 ],
+        '6' : [ 'scale', 0.005, 0.007 ],
+        '7' : [ 'shear', 5   , 0 ],
+        '8' : [ 'perspective' , 0.0001,  0.0007 ]
+        }
+
+    K_SHOW = 'p'
+    idx = 0
+
+    # mw, mh = 1024, 640
+    cur_key = K_MODS['1']
+    # breakpoint()
+    while True:
+        for v in K_MODS.values():
+            hyp[v[0]] = v[2]
+        dataset.hyp = hyp
+        img, labels, img_file, shapes = dataset[idx]
+        h, w = img.shape[:2]
+        print(idx, '\t', img_file, '\t', (w, h))
+        # img = np.array(img)
+        # r = min(mw/w, mh/h)
+        img = cv2.resize(img, (w, h))
+        xyxy = xywhn2xyxy(labels[:, 1:], *img.shape[:2][::-1])
+        # xyxy = xyxy.astype(int)
+        ixyxy = np.concatenate( (labels[:, 0, np.newaxis], xyxy), axis=1)
+        ixyxy = ixyxy.astype(int)
+        draw_img = draw(img, ixyxy)
+        cv2.imshow('Image', draw_img)
+        k = cv2.waitKey(0)
+
+        if k & 0xFF == ord(K_EDIT):
+            print('Enter edit mode')
+            k1 = cv2.waitKey(0)
+            if k1 & 0xFF in [ord(x) for x in K_MODS.keys()]:
+                cur_key = K_MODS[chr( k1 & 0xFF )]
+                print("Adjusting ", cur_key[0])
+            continue
+        else:
+            pass
+
+        if k & 0xFF == ord(K_SHOW):
+            for v in K_MODS.values():
+                print(v, end=' | ')
+
+        if k & 0xFF == ord(K_DOWN):
+            cur_key[2] += cur_key[1]
+            print(cur_key)
+
+        if k & 0xFF == ord(K_UP):
+            cur_key[2] -= cur_key[1]
+            print(cur_key)
+        
+        if k & 0xFF == ord(K_SET):
+            k1 = cv2.waitKey(0)
+            if k1 & 0xFF == ord('s'):
+                cur_key[1] = float(input())
+            if k1 & 0xFF == ord('v'):
+                cur_key[2] = float(input())
+
+        if k & 0xFF == ord(K_QUIT):
+            cv2.destroyAllWindows()
+            break
+        if k & 0xFF == ord(K_NEXT):
+            idx+=1
+            idx=min(idx, len(dataset))
+        if k & 0xFF == ord(K_PREV):
+            idx-=1
+            idx=max(0, idx)
+
+
+        # idx += 1
+
+        # str_in = input()
+        # if str_in == 'quit':
+        #     break
+def draw(img: np.ndarray, labels: np.ndarray):
+    """[summary]
+
+    Args:
+        img (np.ndarray): [description]
+        labels (np.ndarray): [[class_id, xmin, ymin, xmax, ymax]] 
+    """
+    # TODO: gg
+    # color = np.random.randint(0, 255, (3, ))
+    img = np.copy(img)
+    labels = np.copy(labels)
+    for lab in labels:
+        x1y1 = tuple(lab[1:3])
+        x2y2 = tuple(lab[3:])
+        thick = max( img.shape[2] // 100, 2 )
+        cv2.rectangle(img, x1y1, x2y2, (0,255,0), thick )
+    return img
+
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('save_dir', type=str, help="Directory to save augmented files, e.g: ~/datacomp/dataset/images/train")
@@ -306,5 +413,8 @@ if __name__ == '__main__':
     parser.add_argument('--clean', default=False, type=bool, help="Clean target directory first")
     parser.add_argument('--exclude_list', default=None, type=str, help="Path to file contains toss-out images")
     parser.add_argument('--iter', type=int, default=2, help="No. of samples from one image")
+
+    # TODO: this is apart from above ones
+    parser.add_argument('--liveshow', default=False, type=bool)
     args = parser.parse_args()
     _main(args)

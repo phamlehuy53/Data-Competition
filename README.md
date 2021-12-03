@@ -5,7 +5,7 @@ cho mọi tham số trừ bộ màu HSV
 3. chạy file data_augrandom.py
 
 
-```python
+```bash
 # first time with all data
 python data_augrandom.py '/mnt/01D322563C532490/Data/face/211006/dataset/1117/train' --clean --exclude_list='/mnt/01D322563C532490/Data/face/211006/toss_out.txt' --iter=1
 

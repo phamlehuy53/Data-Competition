@@ -588,7 +588,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     labels[:, 1] = 1 - labels[:, 1]
 
             # Cutouts
-            labels = cutout(img, labels, p=0.5)
+            if random.random() < hyp['cutout']:
+                labels = cutout(img, labels, p=0.5)
 
         labels_out = torch.zeros((nl, 6))
         if nl:

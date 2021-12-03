@@ -237,7 +237,7 @@ def cutout(im, labels, p=0.5):
     if random.random() < p:
         h, w = im.shape[:2]
         # scales = [0.5] * 1 + [0.25] * 2 + [0.125] * 4 + [0.0625] * 8 + [0.03125] * 16  # image size fraction
-        scales =  [0.0625] * 8 + [0.03125] * 16  # image size fraction
+        scales =  [0.0225] * 8 + [0.006125] * 16  # image size fraction
         for s in scales:
             mask_h = random.randint(1, int(h * s))  # create random masks
             mask_w = random.randint(1, int(w * s))
