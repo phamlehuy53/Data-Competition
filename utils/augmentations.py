@@ -46,6 +46,7 @@ def augment_hsv(im, hgain=0.5, sgain=0.5, vgain=0.5):
     # HSV color-space augmentation
     if hgain or sgain or vgain:
         r = np.random.uniform(-1, 1, 3) * [hgain, sgain, vgain] + 1  # random gains
+        # r = np.array([ hgain, sgain, vgain ]) + 1
         hue, sat, val = cv2.split(cv2.cvtColor(im, cv2.COLOR_BGR2HSV))
         dtype = im.dtype  # uint8
 
@@ -134,27 +135,36 @@ def random_perspective(im, targets=(), segments=(), degrees=10, translate=.1, sc
 
     # Perspective
     P = np.eye(3)
-    P[2, 0] = random.uniform(-perspective, perspective)  # x perspective (about y)
-    P[2, 1] = random.uniform(-perspective, perspective)  # y perspective (about x)
+    # P[2, 0] = random.uniform(-perspective, perspective)  # x perspective (about y)
+    # P[2, 1] = random.uniform(-perspective, perspective)  # y perspective (about x)
 
+    P[2, 0] = perspective  # x perspective (about y)
+    P[2, 1] = perspective  # y perspective (about x)
     # Rotation and Scale
     R = np.eye(3)
-    a = random.uniform(-degrees, degrees)
+    # a = random.uniform(-degrees, degrees)
+    a = degrees
     # a += random.choice([-180, -90, 0, 90])  # add 90deg rotations to small rotations
-    s = random.uniform(1 - scale, 1 + scale)
+    # s = random.uniform(1 - scale, 1 + scale)
+    s = 1+scale
     # s = 2 ** random.uniform(-scale, scale)
+    s = 2 ** scale
     R[:2] = cv2.getRotationMatrix2D(angle=a, center=(0, 0), scale=s)
 
     # Shear
     S = np.eye(3)
-    S[0, 1] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # x shear (deg)
-    S[1, 0] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # y shear (deg)
+    # S[0, 1] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # x shear (deg)
+    # S[1, 0] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # y shear (deg)
 
+    S[0, 1] =  math.tan(shear* math.pi / 180)
+    S[1, 0] =  math.tan( shear* math.pi / 180 )
     # Translation
     T = np.eye(3)
-    T[0, 2] = random.uniform(0.5 - translate, 0.5 + translate) * width  # x translation (pixels)
-    T[1, 2] = random.uniform(0.5 - translate, 0.5 + translate) * height  # y translation (pixels)
+    # T[0, 2] = random.uniform(0.5 - translate, 0.5 + translate) * width  # x translation (pixels)
+    # T[1, 2] = random.uniform(0.5 - translate, 0.5 + translate) * height  # y translation (pixels)
 
+    T[0, 2] =  ( 0.5 + translate )* width
+    T[1, 2] =  ( 0.5 + translate )* height
     # Combined rotation matrix
     M = T @ S @ R @ P @ C  # order of operations (right to left) is IMPORTANT
     if (border[0] != 0) or (border[1] != 0) or (M != np.eye(3)).any():  # image changed
@@ -234,7 +244,8 @@ def copy_paste(im, labels, segments, p=0.5):
 
 def cutout(im, labels, p=0.5):
     # Applies image cutout augmentation https://arxiv.org/abs/1708.04552
-    if random.random() < p:
+    # if random.random() < p:
+    if random.random() < 1:
         h, w = im.shape[:2]
         # scales = [0.5] * 1 + [0.25] * 2 + [0.125] * 4 + [0.0625] * 8 + [0.03125] * 16  # image size fraction
         scales =  [0.0225] * 8 + [0.006125] * 16  # image size fraction

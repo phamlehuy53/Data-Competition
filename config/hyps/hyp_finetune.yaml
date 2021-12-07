@@ -18,9 +18,9 @@ anchor_t: 4.0
 # Augment
 # Normal - light augment
 fl_gamma: 0.0
-hsv_h: 0.3
-hsv_s: 0.3
-hsv_v: 0.3
+hsv_h: 0.7
+hsv_s: 0.7
+hsv_v: 0.7
 degrees: 5
 translate: 0.001
 scale: 0.0002

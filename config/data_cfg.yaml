@@ -1,6 +1,6 @@
-# train:  /mnt/01D322563C532490/Data/face/211129/images/train
+train:  /mnt/01D322563C532490/Data/face/211129/images/train
 # train:  /mnt/01D322563C532490/Data/face/211129/211129_01/incorrect_masks/images/train
-train:  /mnt/01D322563C532490/Data/face/211129/211129_01/difficult/images/train
+# train:  /mnt/01D322563C532490/Data/face/211129/211129_01/difficult/images/train
 # train:  /mnt/01D322563C532490/Data/face/211129/211129_01/small/images/train
 val: /home/firstman/Documents/code/Dataset/data/dataset/images/val  # relative path to val images
 test: /home/firstman/Documents/code/Dataset/data/dataset/images/public_test  # relative path to public test images

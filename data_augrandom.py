@@ -309,9 +309,9 @@ def liveshow(hyp: dict, dataset: Augmenter):
     K_SET  = 'c'
     # name: {key_value, change_value, init_value}
     K_MODS = {
-        '1' : [ 'hsv_h', 0.1 , 0.1 ] ,
-        '2' : [ 'hsv_s', 0.1 , 0.1 ],
-        '3' : [ 'hsv_v', 0.1 , 0.1 ],
+        '1' : [ 'hsv_h', 0.1 , 0.7 ] ,
+        '2' : [ 'hsv_s', 0.1 , 0.7 ],
+        '3' : [ 'hsv_v', 0.1 , 0.7 ],
         '4' : [ 'degrees'  , 5   , 0 ],
         '5' : [ 'translate', 0.001, 0.005 ],
         '6' : [ 'scale', 0.005, 0.007 ],
